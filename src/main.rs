@@ -1,16 +1,29 @@
-use qbittorrent::Api;
+use qbit::{Api, Credentials};
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() {
-	let username = "admin";
-	let password = "";
-	let address = "http://localhost:4568";
+    let credentials = Credentials::new("admin", "p");
+    let client = Api::new_login("http://localhost:4568", credentials)
+        .await
+        .unwrap();
+    let torrents = client.torrents(None).await.unwrap();
 
-	let api = Api::new(username, password, address).await.unwrap();
+    // let host_credentials = Credentials::new("admin", "Qcug~z6t3'?DC#+"); 
+    // let host_client = Api::new_login("http://192.168.0.25:8080", host_credentials)
+    //     .await
+    //     .unwrap();
+    // let host_torrents = host_client.torrents(None).await.unwrap();	
 
-	let global_speeds = api.get_global_transfer_info().await.unwrap();
-	println!("current download rate is at {} bytes / sec", global_speeds.dl_info_speed());
-
-	let torrent_list = api.get_torrent_list().await.unwrap();
-	println!("qbittorrent is managing {} torrents", torrent_list.len());
+    for torrent in torrents {
+		let name = torrent.name;
+		let short_name: String = name.chars().take(12).collect();
+		let percent_progress = (torrent.progress * 100.0).round() as i32;
+        println!(" ${{color 8e8e8e}}{:?} ${{color white}}{}% ${{execbar 'echo {}'}}", short_name, percent_progress, percent_progress);
+    }
+    // for torrent in host_torrents {
+	// 	let name = torrent.name;
+	// 	let short_name: String = name.chars().take(12).collect();
+	// 	let percent_progress = (torrent.progress * 100.0).round() as i32;
+    //     println!("{:?} {}% ${{execbar 'echo {}'}}", short_name, percent_progress, percent_progress);
+    // }
 }
